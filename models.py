@@ -12,4 +12,4 @@ class Usuarios(Base):
     tipo = Column(String(2), nullable=False)
 
     def __repr__(self):
-        return '<Name%r>' % self.nome
+        return '<Name%r>' % self.login_usuario
