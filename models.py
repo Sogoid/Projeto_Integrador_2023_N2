@@ -13,3 +13,13 @@ class Usuarios(Base):
 
     def __repr__(self):
         return '<Name%r>' % self.login_usuario
+
+
+class Grupos(Base):
+    __tablename__ = 'grupos'
+
+    idusuario = Column(Integer, primary_key=True, autoincrement=True)
+    descricao = Column(String(50), nullable=False)
+
+    def __repr__(self):
+        return '<Name%r>' % self.descricao
