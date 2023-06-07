@@ -18,7 +18,7 @@ class Usuarios(Base):
 class Grupos(Base):
     __tablename__ = 'grupos'
 
-    idusuario = Column(Integer, primary_key=True, autoincrement=True)
+    idgrupos = Column(Integer, primary_key=True, autoincrement=True)
     descricao = Column(String(50), nullable=False)
 
     def __repr__(self):

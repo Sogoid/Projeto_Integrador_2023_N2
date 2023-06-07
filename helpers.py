@@ -3,12 +3,6 @@ import os
 import platform
 import sys
 import time
-from datetime import datetime
-
-from sqlalchemy import func
-
-from database import Session
-from models import Usuarios
 
 
 def logo():
@@ -171,21 +165,3 @@ def sair_sistema():
     tempo_sleep(50)
     clear_terminal()
     exit()
-
-
-def nome_user():
-    # global id_usuario_logado
-    agora = datetime.now()
-
-    session = Session()
-    user = session.query(Usuarios).filter(func.lower(Usuarios.idusuario)).first()
-
-    if user is not None:
-        id_usuario_logado = user.idusuario
-        print(f"""Usuário logado: {id_usuario_logado.upper()}
-              Hora atual: {agora.strftime('%H:%M:%S')}""")
-    else:
-        print("Erro: usuário não encontrado.")
-
-    # Feche a sessão quando terminar de usá-la
-    session.close()
