@@ -50,10 +50,7 @@ TABLES = {'Usuarios': ('''
                          `nome_documento` VARCHAR(255) NOT NULL,
                          `endereco_documento` VARCHAR(255) NOT NULL,
                          `idusuario` INT NOT NULL, 
-                         PRIMARY KEY (`iddocumento`),
-                         FOREIGN KEY (`idusuario`) REFERENCES usuarios (`idusuario`)
-                         ON UPDATE CASCADE
-                         ON DELETE RESTRICT 
+                         PRIMARY KEY (`iddocumento`)
                          )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''), 'Pertence': ('''
                          CREATE TABLE `pertence` (
                          `idusuario` INT NOT NULL, 
@@ -65,7 +62,29 @@ TABLES = {'Usuarios': ('''
                           FOREIGN KEY (`idgrupos`) REFERENCES grupos (`idgrupos`)
                           ON UPDATE CASCADE
                           ON DELETE RESTRICT                          
-                          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''), }
+                          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''), 'Contem': ('''
+                           CREATE TABLE `contem` (
+                           `idgrupos` INT NOT NULL,
+                           `iddocumento` INT NOT NULL,
+                           PRIMARY KEY (idgrupos, iddocumento),
+                           FOREIGN KEY (idgrupos) REFERENCES grupos(idgrupos)
+                           ON UPDATE  CASCADE
+                           ON DELETE  RESTRICT,
+                           FOREIGN KEY (iddocumento) REFERENCES documentos(iddocumento)
+                           ON UPDATE CASCADE
+                           ON DELETE RESTRICT)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''),
+          'Cadastra': ('''
+                           CREATE TABLE `cadastra` (
+                           `idusuario` INT NOT NULL,
+                            `iddocumento` INT NOT NULL,
+                            PRIMARY KEY (idusuario, iddocumento),
+                            FOREIGN KEY (idusuario) REFERENCES usuarios(idusuario)
+                            ON UPDATE CASCADE
+                            ON DELETE RESTRICT,
+                            FOREIGN KEY (iddocumento) REFERENCES documentos(iddocumento)
+                            ON UPDATE CASCADE
+                            ON DELETE RESTRICT
+                           )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;''')}
 
 for tabela_nome in TABLES:
     tabela_sql = TABLES[tabela_nome]

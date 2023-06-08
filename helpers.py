@@ -6,15 +6,16 @@ import time
 
 
 def logo():
-    print("""
-    
+    print(
+        """
 ░█████╗░███╗░░██╗███████╗░██████╗░███████╗██████╗░
 ██╔══██╗████╗░██║██╔════╝██╔════╝░██╔════╝██╔══██╗
 ██║░░██║██╔██╗██║█████╗░░██║░░██╗░█████╗░░██║░░██║
 ██║░░██║██║╚████║██╔══╝░░██║░░╚██╗██╔══╝░░██║░░██║
 ╚█████╔╝██║░╚███║███████╗╚██████╔╝███████╗██████╔╝
 ░╚════╝░╚═╝░░╚══╝╚══════╝░╚═════╝░╚══════╝╚═════╝░
-    """)
+    """
+    )
 
 
 def titulo_principal(num, tmsg):
@@ -27,18 +28,19 @@ def titulo_principal(num, tmsg):
 
 def clear_terminal():
     """Função para verificar o sistema operacional e limpar o terminal
-    Obs.: Esta função não funciona no terminal do pycharm somente no terminal do
-    integrado.
+    Obs.: Esta função não funciona no terminal do pycharm somente no terminal
+    do integrado.
     """
-    if platform.system() == 'Windows':
-        os.system('cls')
+    if platform.system() == "Windows":
+        os.system("cls")
     else:
         print("\033[H\033[J")
 
 
 def getch():
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         import msvcrt
+
         return msvcrt.getch().decode()
     else:
         import termios
@@ -73,8 +75,7 @@ def cadastro_password():
 
         if senhas == rep_senhas:
             print(
-                "\nSenha cadastrada com sucesso!\n"
-                "Cadastro realizado com Sucesso!!\n"
+                "\nSenha cadastrada com sucesso!\n" "Cadastro realizado com Sucesso!!\n"
             )
             return senhas
         print("\nSenhas diferentes. Tente novamente.\n")
@@ -103,12 +104,13 @@ def tempo_sleep(total):
 
     for i in range(total):
         time.sleep(0.1)
-        sys.stdout.write('\r')
-        sys.stdout.write(' ' * 12 + f"[{'=' * int(20 * i / total):<20}]"
-                                    f"{int(100 * i / total)}%")
+        sys.stdout.write("\r")
+        sys.stdout.write(
+            " " * 12 + f"[{'=' * int(20 * i / total):<20}]" f"{int(100 * i / total)}%"
+        )
         sys.stdout.flush()
-    sys.stdout.write('\r')
-    sys.stdout.write(' ' * 12 + f"[{'=' * 20:<20}] 100%")
+    sys.stdout.write("\r")
+    sys.stdout.write(" " * 12 + f"[{'=' * 20:<20}] 100%")
     sys.stdout.flush()
     print()
 
@@ -152,8 +154,8 @@ def titulo_sistema(tmsg):
 
 
 def linha(numlinha):
-    """A função linha cria uma linha de asteriscos com o mesmo comprimento que o valor
-    retornado por numlinha."""
+    """A função linha cria uma linha de asteriscos com o mesmo comprimento que
+    o valor     retornado por numlinha."""
     print("*" * numlinha)
 
 

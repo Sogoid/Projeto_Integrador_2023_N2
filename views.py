@@ -9,12 +9,13 @@ from helpers import getch, clear_terminal, tempo_sleep, titulo_sistema, linha, s
 from models import Usuarios, Grupos
 from ultis import listagem_usuario, pesquisa_usuario, listagem_grupo, pesquisa_grupo
 
-
 # TODO: 6. Uma tela de bloqueio e desbloqueio de usuários
 # TODO: 10. Uma tela para inclusão de um usuário em um grupo
 # TODO: 11. Uma tela para exclusão de um usuário de um grupo com mensagem de confirmação da exclusão
 # TODO: 12. Uma tela para listagem dos documentos cadastrados no sistema com mensagem de confirmação para exclusão
 # TODO: 13. Uma tela para upload de múltiplos documentos no sistema
+
+logged_in_user_id = None
 
 
 # Uma tela de login no sistema
@@ -54,7 +55,8 @@ def login():
             print("Nome de usuário ou senha incorretos!\n")
 
             # Check if the Esc key was pressed
-            titulo_sistema("Pressione Esc para sair ou qualquer outra tecla para continuar.")
+            titulo_sistema("Pressione Esc para sair ou qualquer outra tecla"
+                           "para continuar.")
             ch = getch()
             clear_terminal()
             if ch == '\x1b' or ch == '\033' or ch == '\u001b':
@@ -66,6 +68,24 @@ def login():
 
         # Fechar a sessão quando terminar de usá-la
         session.close()
+
+
+def user_logado():
+    global logged_in_user_id
+    session = Session()
+    try:
+        # Pede ao usuário para digitar o nome do grupo que deseja buscar
+        user = session.query(Usuarios).get(logged_in_user_id)
+        if user:
+            # Obtenha a senha antiga do usuário
+            print(f"Usuário: {user.login_usuario.upper()}")
+        else:
+            print("Erro: Usuário não encontrado.")
+    except Exception as e:
+        print(f"Erro ao acessar o banco de dados: {e}")
+
+    # Feche a sessão quando terminar de usá-la
+    session.close()
 
 
 # INICIO DE FUNÇÕES DE CADASTRO
@@ -115,6 +135,7 @@ def cadastro(tipo_user):
         # Verificando se o tipo do cliente tem permissão antes do cadastro
         if tipo_user == "U":
             titulo_principal(10, "Tela de cadastro de Usuário.")
+            user_logado()
             print("Usuário sem permissão!")
             continuar = input("\nDeseja voltar para o menu inicial? S/N: ")
             match continuar.casefold():
@@ -165,6 +186,7 @@ def cadastro(tipo_user):
 
 def cadastrar_grupo(tipo_user):
     titulo_principal(10, "Tela de cadastro de Grupo.")
+    user_logado()
     while True:
         # Leia a entrada do usuário
         descricao = input("Informe Nome/Descrição Novo Grupo: ")
@@ -198,9 +220,10 @@ def cadastrar_grupo(tipo_user):
 
 # INICIO DE FUNÇÕES DE ATUALIZAÇÃO
 
-def alterar_senha(tipo_user):
+def alterar_senha_user(tipo_user):
     global logged_in_user_id
     while True:
+        clear_terminal()
         titulo_principal(8, "Tela de Atualização de Senhas.")
         session = Session()
 
@@ -231,7 +254,7 @@ def alterar_senha(tipo_user):
 def alterar_grupo(tipo_user):
     while True:
         titulo_principal(8, "Tela de Atualização de GRUPO.")
-
+        user_logado()
         # Pede ao usuário para digitar o nome do grupo que deseja buscar
         descricao = input("Digite o nome do grupo que deseja buscar: ")
         print()
@@ -252,7 +275,91 @@ def alterar_grupo(tipo_user):
                 clear_terminal()
                 menu_navegacao(tipo_user)
         else:
-            print("Erro: usuário não encontrado.")
+            print("Erro: Grupo não encontrado.")
+
+        # Feche a sessão quando terminar de usá-la
+        session.close()
+
+
+def alterar_status_user(tipo_user):
+    if tipo_user != 'A':
+        print("Erro: Apenas usuários com tipo 'A' (administrador) podem utilizar esta função.")
+        return
+    
+    while True:
+        titulo_principal(8, "Tela de Atualização de Status.")
+        user_logado()
+
+        id_user = input("Digite o ID do Usuário que deseja buscar: ")
+        print()
+        session = Session()
+
+        # Verifique se a senha está correta
+        user = session.query(Usuarios).filter(Usuarios.idusuario == id_user).first()
+        if user:
+            linha(50)
+            print(f"Usuário: {user.login_usuario.upper()}")
+            linha(50)
+            print("\nLegenda: A-Ativo, B-Bloqueado\n")
+            status_usuario = input("Digite o seu novo Status: ")
+            while status_usuario.upper() not in ['A', 'B']:
+                print("\nEntrada inválida. Por favor, digite 'A' para Ativo ou 'B' para Bloqueado.\n")
+                status_usuario = input("Digite o seu novo Status: ")
+            user.status_usuario = status_usuario.upper()
+            session.commit()
+            print()
+            linha(50)
+            print("Atualização do Status efetuada com sucesso!!")
+            linha(50)
+            print()
+            choice = input("Deseja retornar ao menu (M) ou sair (X)? ")
+            if choice.lower() == 'n' or choice.lower() == 'x':
+                sair_sistema()
+                clear_terminal()
+            elif choice.lower() == 'm':
+                clear_terminal()
+                menu_update_user(tipo_user)
+        else:
+            print("Erro: Status não encontrado.")
+
+        # Feche a sessão quando terminar de usá-la
+        session.close()
+
+
+def alterar_tipo_user():
+    pass
+
+
+def alterar_email_user(tipo_user):
+    while True:
+        titulo_principal(8, "Tela de Atualização de E-mail.")
+        user_logado()
+
+        old_email_user = input("Digite o E-mail que deseja buscar: ")
+        print()
+        linha(50)
+        print()
+        session = Session()
+
+        # Verifique se a senha está correta
+        new_email_user = session.query(Usuarios).filter(Usuarios.email_usuario == old_email_user).first()
+        if new_email_user:
+            new_email_user.email_usuario = input("Digite o seu novo E-mail: ")
+            session.commit()
+            print()
+            linha(50)
+            print("Atualização do E-mail efetuada com sucesso!!")
+            linha(50)
+            print()
+            choice = input("Deseja retornar ao menu (M) ou sair (X)? ")
+            if choice.lower() == 'n' or choice.lower() == 'x':
+                sair_sistema()
+                clear_terminal()
+            elif choice.lower() == 'm':
+                clear_terminal()
+                menu_update_user(tipo_user)
+        else:
+            print("Erro: E-mail não encontrado.")
 
         # Feche a sessão quando terminar de usá-la
         session.close()
@@ -296,6 +403,7 @@ def menu_navegacao(tipo_user):
     continuar = "s"
     while continuar == 's' or continuar == 'S':
         titulo_principal(15, "Menu de Navegação.")
+        user_logado()
         print("\nEscolha uma das opções abaixo:")
         print('''
         1 – Cadastro de Usuários;\n
@@ -329,9 +437,10 @@ def menu_alterar(tipo_user):
     continuar = "s"
     while continuar == 's' or continuar == 'S':
         titulo_principal(8, "Menu de Atualização de dados.")
+        user_logado()
         print("\nEscolha uma das opções abaixo:")
         print('''
-        1 – Atualizar Senha de Usuário;\n
+        1 – Atualizar Dados do Usuário;\n
         2 – Atualizar Nome de Grupo;\n
         3 – Menu de Navegação;\n
         4 - Sair.''')
@@ -339,7 +448,7 @@ def menu_alterar(tipo_user):
         match opcao:
             case 1:
                 clear_terminal()
-                alterar_senha(tipo_user)
+                menu_update_user(tipo_user)
             case 2:
                 clear_terminal()
                 alterar_grupo(tipo_user)
@@ -361,6 +470,7 @@ def menu_cadastro(tipo_user):
     continuar = "s"
     while continuar == 's' or continuar == 'S':
         titulo_principal(10, "Menu de Cadastro.")
+        user_logado()
         print("\nEscolha uma das opções abaixo:")
         print('''
         1 – Cadastro de Usuários;\n
@@ -392,6 +502,7 @@ def relatorios(tipo_user):
     cont = "s"
     while cont == 's' or cont == 'S':
         titulo_principal(15, "Menu de Relatórios.")
+        user_logado()
         print("\nEscolha uma das opções abaixo:")
         print('''
            1 – Listagem de Usuários;\n
@@ -424,6 +535,48 @@ def relatorios(tipo_user):
             case 6:
                 clear_terminal()
                 titulo_principal(15, "Menu de Relatórios.")
+                sair_sistema()
+        cont = input("\nDeseja voltar para o menu relatório? S/N: ")
+        while cont.casefold() not in ['s', 'n']:
+            print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
+            cont = input("\nDeseja voltar para o menu relatório? S/N: ")
+
+
+def menu_update_user(tipo_user):
+    cont = "s"
+    while cont == 's' or cont == 'S':
+        titulo_principal(7, "Menu de Atualização Dados Usuário.")
+        user_logado()
+        print("\nEscolha uma das opções abaixo:")
+        # Alterar Status e Tipo de usuário somente o Administrador pode fazer.
+        print('''
+               1 – Atualização de E-mail Usuários;\n
+               2 – Alterar Senha de Usuários;\n
+               3 – Alterar Status de Usuários;\n
+               4 – Alterar Tipo de Usuários;\n
+               5 – Menu de Atualização de dados;\n
+               6 - Sair.''')
+        opcao = int(input("\nDigite uma opção para interagir: "))
+        match opcao:
+            case 1:
+                clear_terminal()
+                alterar_email_user(tipo_user)
+            case 2:
+                clear_terminal()
+                alterar_senha_user(tipo_user)
+            case 3:
+                clear_terminal()
+                alterar_status_user(tipo_user)
+            case 4:
+                clear_terminal()
+                alterar_tipo_user()
+            case 5:
+                clear_terminal()
+                menu_alterar(tipo_user)
+
+            case 6:
+                clear_terminal()
+                titulo_principal(7, "Menu de Atualização Dados Usuário.")
                 sair_sistema()
         cont = input("\nDeseja voltar para o menu relatório? S/N: ")
         while cont.casefold() not in ['s', 'n']:
