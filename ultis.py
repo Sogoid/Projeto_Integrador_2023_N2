@@ -125,3 +125,11 @@ def tabela_relatorio(cabecalho, dados):
             for dado, largura in zip(linha, largura_colunas):
                 print(f"{dado:{largura}}", end=" | ")
             print()
+
+
+# Extensão de arquivos permitidos para salvar
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

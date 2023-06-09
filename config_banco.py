@@ -49,8 +49,7 @@ TABLES = {'Usuarios': ('''
                          `iddocumento` INT NOT NULL AUTO_INCREMENT,
                          `nome_documento` VARCHAR(255) NOT NULL,
                          `endereco_documento` VARCHAR(255) NOT NULL,
-                         `idusuario` INT NOT NULL, 
-                         PRIMARY KEY (`iddocumento`)
+                          PRIMARY KEY (`iddocumento`)
                          )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''), 'Pertence': ('''
                          CREATE TABLE `pertence` (
                          `idusuario` INT NOT NULL, 
