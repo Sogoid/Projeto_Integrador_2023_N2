@@ -319,3 +319,6 @@ fabric.properties
 .vscode
 /vscode/
 __pycache__
+/venv/
+.venv
+uploads/
