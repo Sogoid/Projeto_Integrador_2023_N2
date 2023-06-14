@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -13,6 +13,7 @@ class Usuarios(Base):
     senha_usuario = Column(String(20), nullable=False)
     status_usuario = Column(String(2), nullable=False)
     tipo = Column(String(2), nullable=False)
+    deleted = Column(Boolean, default=False)
 
     def __repr__(self):
         return '<Name%r>' % self.login_usuario
@@ -22,6 +23,7 @@ class Contem(Base):
     __tablename__ = 'contem'
     idgrupos = Column(Integer, ForeignKey('grupos.idgrupos'), primary_key=True)
     iddocumento = Column(Integer, ForeignKey('documentos.iddocumento'), primary_key=True)
+    deleted = Column(Boolean, default=False)
 
 
 class Grupos(Base):
@@ -30,6 +32,7 @@ class Grupos(Base):
     idgrupos = Column(Integer, primary_key=True, autoincrement=True)
     descricao = Column(String(50), nullable=False)
     documentos = relationship('Documentos', secondary='contem', back_populates='grupos')
+    deleted = Column(Boolean, default=False)
 
     def __repr__(self):
         return '<Name%r>' % self.descricao
@@ -41,6 +44,7 @@ class Documentos(Base):
     iddocumento = Column(Integer, primary_key=True)
     nome_documento = Column(String(255), nullable=False)
     endereco_documento = Column(String(255), nullable=False)
+    deleted = Column(Boolean, default=False)
     grupos = relationship('Grupos', secondary='contem', back_populates='documentos')
 
     def __repr__(self):
@@ -51,6 +55,7 @@ class Pertence(Base):
     __tablename__ = 'pertence'
     idusuario = Column(Integer, ForeignKey('usuarios.idusuario'), primary_key=True)
     idgrupos = Column(Integer, ForeignKey('grupos.idgrupos'), primary_key=True)
+    deleted = Column(Boolean, default=False)
     usuario = relationship('Usuarios', back_populates='grupos')
     grupo = relationship('Grupos', back_populates='usuarios')
 

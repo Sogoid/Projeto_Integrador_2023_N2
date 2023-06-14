@@ -37,23 +37,27 @@ TABLES = {'Usuarios': ('''
                          `email_usuario` VARCHAR(255) NOT NULL,
                          `senha_usuario` VARCHAR(255) NOT NULL,
                          `status_usuario` VARCHAR(1) NOT NULL,
-                         `tipo` VARCHAR(1) NOT NULL, 
+                         `tipo` VARCHAR(1) NOT NULL,
+                         `deleted` BOOLEAN DEFAULT 0,
                          PRIMARY KEY (`idusuario`)
                          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''), 'Grupos': ('''
                          CREATE TABLE `grupos` (
                          `idgrupos` INT NOT NULL AUTO_INCREMENT,
-                         `descricao` VARCHAR(255) NOT NULL UNIQUE ,
+                         `descricao` VARCHAR(255) NOT NULL UNIQUE,
+                         `deleted` BOOLEAN DEFAULT 0,
                          PRIMARY KEY (`idgrupos`)
                          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''), 'Documentos': ('''
                          CREATE TABLE `documentos` (
                          `iddocumento` INT NOT NULL AUTO_INCREMENT,
                          `nome_documento` VARCHAR(255) NOT NULL,
                          `endereco_documento` VARCHAR(255) NOT NULL,
+                         `deleted` BOOLEAN DEFAULT 0,
                           PRIMARY KEY (`iddocumento`)
                          )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''), 'Pertence': ('''
                          CREATE TABLE `pertence` (
                          `idusuario` INT NOT NULL, 
                          `idgrupos` INT NOT NULL,
+                         `deleted` BOOLEAN DEFAULT 0,
                           PRIMARY KEY (`idusuario`,`idgrupos`),
                           FOREIGN KEY (`idusuario`) REFERENCES usuarios (`idusuario`)
                           ON UPDATE CASCADE
@@ -65,6 +69,7 @@ TABLES = {'Usuarios': ('''
                            CREATE TABLE `contem` (
                            `idgrupos` INT NOT NULL,
                            `iddocumento` INT NOT NULL,
+                           `deleted` BOOLEAN DEFAULT 0,
                            PRIMARY KEY (idgrupos, iddocumento),
                            FOREIGN KEY (idgrupos) REFERENCES grupos(idgrupos)
                            ON UPDATE  CASCADE
@@ -76,6 +81,7 @@ TABLES = {'Usuarios': ('''
                            CREATE TABLE `cadastra` (
                            `idusuario` INT NOT NULL,
                             `iddocumento` INT NOT NULL,
+                            `deleted` BOOLEAN DEFAULT 0,
                             PRIMARY KEY (idusuario, iddocumento),
                             FOREIGN KEY (idusuario) REFERENCES usuarios(idusuario)
                             ON UPDATE CASCADE
