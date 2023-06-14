@@ -11,11 +11,11 @@ Link do repositório no GitHub para analisar o código
  -> https://github.com/Sogoid/Projeto_Integrador_2023_N2
 """
 
-from views import menu_opcao
+from views import menu_option
 
 
 def app():
-    menu_opcao()
+    menu_option()
 
 
 if __name__ == "__main__":

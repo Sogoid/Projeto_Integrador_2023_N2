@@ -11,10 +11,13 @@ from database import Session, UPLOAD_PATH
 from helpers import getch, clear_terminal, tempo_sleep, titulo_sistema, linha, sair_sistema, \
     titulo_principal, cadastro_password
 from models import Usuarios, Grupos, Documentos, Pertence, Contem
-from ultis import listagem_usuario, pesquisa_usuario, listagem_grupo, pesquisa_grupo, allowed_file, tabela_relatorio
+from ultis import list_user, search_user, list_group, search_group, allowed_file, table_report, list_user_deleted, \
+    list_document
 
-# TODO: 11. Uma tela para exclusão de um usuário de um grupo com mensagem de confirmação da exclusão
-# TODO: 12. Uma tela para listagem dos documentos cadastrados no sistema com mensagem de confirmação para exclusão
+# TODO: 11. Uma tela para exclusão de um usuário de um grupo
+# TODO: 11. Uma tela para exclusão de um documento de um grupo
+# TODO: 12. Uma tela para exclusão de documento
+# TODO: 12. Uma tela para exclusão de grupo
 
 
 logged_in_user_id = None
@@ -22,7 +25,7 @@ logged_in_user_id = None
 
 # Uma tela de login no sistema
 def login():
-    global tipo_usuario
+    global type_user
     global logged_in_user_id
     while True:
         titulo_principal(17, "Tela de login.")
@@ -46,12 +49,20 @@ def login():
                 sair_sistema()
                 clear_terminal()
             else:
-                menu_opcao()
+                menu_option()
 
+        # Check if the user is deleted
+        if user.deleted != 0:
+            print()
+            linha(50)
+            print(f"\nUsuário {user.login_usuario.upper()} excluído.\n"
+                  f"Por favor entre em contato com o administrador!")
+            break
         # Check if the user is blocked
-        if user.status_usuario != 'A':
-            print(f"Usuário {user.login_usuario.upper()} bloqueado."
+        elif user.status_usuario != 'A':
+            print(f"\nUsuário {user.login_usuario.upper()} bloqueado."
                   f"\nPor favor entre em contato com o administrador!")
+            break
 
         # Display success message
         print(f"\nBem vindo {username.upper()}!\n")
@@ -65,9 +76,9 @@ def login():
 
         # Clear the terminal
         clear_terminal()
-        tipo_usuario = user.tipo
+        type_user = user.tipo
         logged_in_user_id = user.idusuario
-        menu_navegacao(tipo_usuario)
+        menu_navigation(type_user)
 
         # Fechar a sessão quando terminar de usá-la
         session.close()
@@ -127,7 +138,7 @@ def cadastro_login():
                 clear_terminal()
             elif choice.lower() == 'm':
                 clear_terminal()
-                menu_opcao()
+                menu_option()
 
 
 def cadastro(tipo_user):
@@ -144,7 +155,7 @@ def cadastro(tipo_user):
             match continuar.casefold():
                 case 's':
                     clear_terminal()
-                    menu_navegacao(tipo_user)
+                    menu_navigation(tipo_user)
                     break
                 case 'n':
                     sair_sistema()
@@ -232,6 +243,9 @@ def cadastro_documento(tipo_user):
             if not filepath:
                 print('Nenhum arquivo selecionado.')
                 return
+
+            parts = UPLOAD_PATH.split(os.path.sep)
+            last_two_folders = os.path.join(parts[-2], parts[-1])
             name = os.path.basename(filepath)
 
             # Verifica se o tipo de arquivo é permitido
@@ -249,9 +263,13 @@ def cadastro_documento(tipo_user):
 
             # Salva o nome e o caminho do arquivo no banco de dados
             session = Session()
-            file = Documentos(nome_documento=name, endereco_documento=path)
+            file = Documentos(nome_documento=name, endereco_documento=last_two_folders)
             session.add(file)
             session.commit()
+            linha(50)
+            print()
+            print("Operação de cadastro de Documento efetuada com sucesso!!")
+            print()
             # Fecha a sessão quando terminar de usá-la
             session.close()
 
@@ -264,7 +282,7 @@ def cadastro_documento(tipo_user):
             print('Opção inválida. Por favor, digite "s" ou "n".')
 
 
-def adicionar_usuario_grupo():
+def add_user_group():
     titulo_principal(10, "Adicionar Usuário ao Grupo.")
     user_logado()
 
@@ -285,9 +303,9 @@ def adicionar_usuario_grupo():
         # Busca informações sobre o usuário especificado
         user = session.query(Usuarios).filter(Usuarios.login_usuario == login_usuario).first()
         grupo = session.query(Grupos).filter(Grupos.descricao == descricao).first()
-        if user:
+        if user and grupo:
             dados = [[user.idusuario, user.login_usuario, grupo.idgrupos, grupo.descricao]]
-            tabela_relatorio(cabecalho, dados)
+            table_report(cabecalho, dados)
             linha(50)
             print()
         else:
@@ -311,12 +329,12 @@ def adicionar_usuario_grupo():
     session.close()
 
 
-def adicionar_grupo_documento():
+def add_group_document():
     titulo_principal(10, "Adicionar Grupo ao Documento.")
     user_logado()
 
     # Cria a lista com os títulos das colunas
-    cabecalho = ["ID DOCUMENTO", "DESCRIÇÃO", "ID GRUPO", "DESCRIÇÃO"]
+    header = ["ID DOCUMENTO", "DESCRIÇÃO", "ID GRUPO", "DESCRIÇÃO"]
 
     session = Session()
 
@@ -334,7 +352,7 @@ def adicionar_grupo_documento():
         grupo = session.query(Grupos).filter(Grupos.descricao == descricao).first()
         if user:
             dados = [[user.iddocumento, user.nome_documento, grupo.idgrupos, grupo.descricao]]
-            tabela_relatorio(cabecalho, dados)
+            table_report(header, dados)
             linha(50)
             print()
         else:
@@ -385,7 +403,7 @@ def alterar_senha_user(tipo_user):
                     clear_terminal()
                 elif choice.lower() == 'm':
                     clear_terminal()
-                    menu_navegacao(tipo_user)
+                    menu_navigation(tipo_user)
         else:
             print("Erro: usuário não encontrado.")
 
@@ -415,7 +433,7 @@ def alterar_grupo(tipo_user):
                 clear_terminal()
             elif choice.lower() == 'm':
                 clear_terminal()
-                menu_navegacao(tipo_user)
+                menu_navigation(tipo_user)
         else:
             print("Erro: Grupo não encontrado.")
 
@@ -424,9 +442,9 @@ def alterar_grupo(tipo_user):
 
 
 def alterar_status_user(tipo_user):
-    titulo_principal(8, "Tela de Atualização de Status.")
-    user_logado()
     if tipo_user != 'A':
+        titulo_principal(8, "Tela de Atualização de Status.")
+        user_logado()
         print("Erro: Apenas usuários com tipo 'A' (administrador) podem utilizar esta função.")
         return
 
@@ -554,11 +572,79 @@ def alterar_email_user(tipo_user):
 
 # FIM DE FUNÇÕES DE ATUALIZAÇÃO
 
-tipo_usuario = None
+
+# INICIO DE FUNÇÕES DE EXCLUSÃO
+
+def deleted_user(type_users):
+    clear_terminal()
+    titulo_principal(10, "Tela de Exclusão de Usuário.")
+    user_logado()
+    if type_users != 'A':
+        print("Erro: Apenas usuários com tipo 'A' (administrador) podem utilizar esta função.")
+        return
+    # Cria a lista com os títulos das colunas
+    header = ["ID USUÁRIO", "NOME USUÁRIO"]
+
+    session = Session()
+    user = None
+    while not user:
+        clear_terminal()
+        titulo_principal(10, "Tela de Exclusão de Usuário.")
+        user_logado()
+
+        # Pede ao usuário para digitar o nome do usuário que deseja buscar
+        search_users = input("Digite o nome do usuário que deseja buscar: ")
+        print()
+        linha(50)
+        print()
+
+        # Busca informações sobre o usuário especificado
+        user = session.query(Usuarios).filter(Usuarios.login_usuario == search_users).first()
+        if user:
+            dados = [[user.idusuario, user.login_usuario]]
+            table_report(header, dados)
+            linha(50)
+            print()
+        else:
+            clear_terminal()
+            titulo_principal(10, "Tela de Exclusão de Usuário.")
+            user_logado()
+            continuar = input("Deseja continuar? (S/N): ")
+            if continuar.upper() == 'N':
+                clear_terminal()
+                sair_sistema()
+                break
+
+    idusuario = input("Digite o ID do Usuário: ")
+    print()
+    linha(50)
+
+    relacionamento = session.query(Pertence).filter(Pertence.idusuario == idusuario).first()
+    if relacionamento:
+        print(f"""\nUsuário {user.login_usuario.upper()} existe relacionamento com um grupo de documento.\n 
+Por favor excluir primeiro o relacionamento antes do Usuário!""")
+    else:
+        # Verifica se já existe um relacionamento entre o usuário e o grupo especificados
+        new_id = session.query(Usuarios).filter_by(idusuario=idusuario).first()
+        if new_id is not None:
+            # Define o valor da coluna 'deleted' como True para excluir o usuário logicamente
+            new_id.deleted = True
+            session.commit()
+            print("Operação de exclusão efetuada com sucesso!!")
+        else:
+            print("Usuário não encontrado.")
+
+    # Fechar a sessão quando terminar de usá-la
+    session.close()
+
+
+# FIM DE FUNÇÕES DE EXCLUSÃO
+
+type_user = None
 
 
 # INICIO DE FUNÇÕES DE MENU
-def menu_opcao():
+def menu_option():
     """Função criada para ser menu"""
     continuar = "s"
     while continuar == 's' or continuar == 'S':
@@ -580,13 +666,17 @@ def menu_opcao():
                 clear_terminal()
                 titulo_principal(17, "Menu de Opção.")
                 sair_sistema()
-        continuar = input("\nDeseja voltar para o menu inicial? S/N: ")
-        while continuar.casefold() not in ['s', 'n']:
-            print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
-            continuar = input("\nDeseja voltar para o menu inicial? S/N: ")
+        while True:
+            continuar = input("\nDeseja voltar para o Menu de Opção? S/N: ")
+            if continuar.casefold() == 'n':
+                sair_sistema()
+            elif continuar.casefold() == 's':
+                menu_option()
+            else:
+                print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
 
 
-def menu_navegacao(tipo_user):
+def menu_navigation(type_user):
     """Função criada para ser menu"""
     continuar = "s"
     while continuar == 's' or continuar == 'S':
@@ -596,28 +686,36 @@ def menu_navegacao(tipo_user):
         print('''
         1 – Cadastro em Geral;\n
         2 – Atualização de dados;\n
-        3 – Relatórios do Sistema;\n
-        4 - Sair.''')
+        3 – Exclusão do Sistema;\n
+        4 – Relatórios do Sistema;\n
+        5 - Sair.''')
         opcao = int(input("\nDigite uma opção para interagir: "))
         match opcao:
             case 1:
                 clear_terminal()
-                menu_cadastro(tipo_user)
+                menu_cadastro(type_user)
             case 2:
                 clear_terminal()
-                menu_alterar(tipo_user)
+                menu_alterar(type_user)
             case 3:
                 clear_terminal()
-                relatorios(tipo_user)
-                sair_sistema()
+                deleted_user(type_user)
             case 4:
+                clear_terminal()
+                report(type_user)
+                sair_sistema()
+            case 5:
                 clear_terminal()
                 titulo_principal(15, "Menu de Navegação.")
                 sair_sistema()
-        continuar = input("\nDeseja voltar para o menu navegação? S/N: ")
-        while continuar.casefold() not in ['s', 'n']:
-            print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
+        while True:
             continuar = input("\nDeseja voltar para o menu navegação? S/N: ")
+            if continuar.casefold() == 'n':
+                sair_sistema()
+            elif continuar.casefold() == 's':
+                menu_navigation(type_user)
+            else:
+                print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
 
 
 def menu_alterar(tipo_user):
@@ -642,15 +740,19 @@ def menu_alterar(tipo_user):
                 alterar_grupo(tipo_user)
             case 3:
                 clear_terminal()
-                menu_navegacao(tipo_user)
+                menu_navigation(tipo_user)
             case 4:
                 clear_terminal()
                 titulo_principal(8, "Menu de Atualização de dados.")
                 sair_sistema()
-        continuar = input("\nDeseja voltar para o menu Atualização de Dados? S/N: ")
-        while continuar.casefold() not in ['s', 'n']:
-            print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
-            continuar = input("\nDeseja voltar para o menu Atualização de Dados? S/N: ")
+        while True:
+            continuar = input("\nDeseja voltar para o menu navegação? S/N:")
+            if continuar.casefold() == 'n':
+                sair_sistema()
+            elif continuar.casefold() == 's':
+                menu_navigation(tipo_user)
+            else:
+                print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
 
 
 def menu_cadastro(tipo_user):
@@ -681,24 +783,28 @@ def menu_cadastro(tipo_user):
                 cadastro_documento(tipo_user)
             case 4:
                 clear_terminal()
-                adicionar_usuario_grupo()
+                add_user_group()
             case 5:
                 clear_terminal()
-                adicionar_grupo_documento()
+                add_group_document()
             case 6:
                 clear_terminal()
-                menu_navegacao(tipo_user)
+                menu_navigation(tipo_user)
             case 7:
                 clear_terminal()
                 titulo_principal(10, "Menu de Cadastro.")
                 sair_sistema()
-        continuar = input("\nDeseja voltar para o menu navegação? S/N: ")
-        while continuar.casefold() not in ['s', 'n']:
-            print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
-            continuar = input("\nDeseja voltar para o menu navegação? S/N: ")
+        while True:
+            continuar = input("\nDeseja voltar para o menu navegação? S/N:")
+            if continuar.casefold() == 'n':
+                sair_sistema()
+            elif continuar.casefold() == 's':
+                menu_navigation(tipo_user)
+            else:
+                print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
 
 
-def relatorios(tipo_user):
+def report(tipo_user):
     cont = "s"
     while cont == 's' or cont == 'S':
         titulo_principal(15, "Menu de Relatórios.")
@@ -707,39 +813,52 @@ def relatorios(tipo_user):
         print('''
            1 – Listagem de Usuários;\n
            2 – Pesquisa de Usuários;\n
-           3 – Listagem de Grupos;\n
-           4 – Pesquisa de Grupos;\n
-           5 – Menu de Navegação;\n
-           6 - Sair.''')
-        opcao = int(input("\nDigite uma opção para interagir: "))
-        match opcao:
+           3 – Listagem de Usuários Excluídos;\n
+           4 – Listagem de Grupos;\n
+           5 – Listagem de Documentos;\n
+           6 – Pesquisa de Grupos;\n
+           7 – Menu de Navegação;\n
+           8 - Sair.''')
+        option = int(input("\nDigite uma opção para interagir: "))
+        match option:
             case 1:
                 clear_terminal()
-                listagem_usuario()
+                list_user()
             case 2:
                 clear_terminal()
-                pesquisa_usuario()
-
+                search_user()
             case 3:
                 clear_terminal()
-                listagem_grupo()
+                list_user_deleted()
 
             case 4:
                 clear_terminal()
-                pesquisa_grupo()
+                list_group()
 
             case 5:
                 clear_terminal()
-                menu_navegacao(tipo_user)
+                list_document()
 
             case 6:
                 clear_terminal()
+                search_group()
+
+            case 7:
+                clear_terminal()
+                menu_navigation(tipo_user)
+
+            case 8:
+                clear_terminal()
                 titulo_principal(15, "Menu de Relatórios.")
                 sair_sistema()
-        cont = input("\nDeseja voltar para o menu relatório? S/N: ")
-        while cont.casefold() not in ['s', 'n']:
-            print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
-            cont = input("\nDeseja voltar para o menu relatório? S/N: ")
+        while True:
+            continuar = input("\nDeseja voltar para o menu navegação? S/N: ")
+            if continuar.casefold() == 'n':
+                sair_sistema()
+            elif continuar.casefold() == 's':
+                menu_navigation(tipo_user)
+            else:
+                print("Entrada inválida. Por favor, digite 's' para continuar ou 'n' para sair.")
 
 
 def menu_update_user(tipo_user):

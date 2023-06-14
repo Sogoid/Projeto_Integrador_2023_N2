@@ -1,13 +1,13 @@
 from database import Session
 from helpers import titulo_principal, linha
-from models import Usuarios, Grupos
+from models import Usuarios, Grupos, Documentos
 
 
-def listagem_usuario():
+def list_user():
     titulo_principal(15, "Listagem de Usuários.")
     print("""Legenda da tabela\nSTATUS: A-Ativo, B-Bloqueado\nTIPO: A-Administrador, U-Usuário.\n""")
     # Cria a lista com os títulos das colunas
-    cabecalho = ["MATRICULA", "NOME USUÁRIO", "E-MAIL", "STATUS", "TIPO"]
+    header = ["MATRICULA", "NOME USUÁRIO", "E-MAIL", "STATUS", "TIPO"]
 
     session = Session()
 
@@ -17,17 +17,17 @@ def listagem_usuario():
              for user in user]
     # Fechar a sessão quando terminar de usá-la
     session.close()
-    tabela_relatorio(cabecalho, dados)
+    table_report(header, dados)
 
 
-def pesquisa_usuario():
+def search_user():
     titulo_principal(15, "Pesquisa de Usuários.")
 
     # Cria a lista com os títulos das colunas
-    cabecalho = ["MATRICULA", "NOME USUÁRIO", "E-MAIL", "STATUS", "TIPO"]
+    header = ["MATRICULA", "NOME USUÁRIO", "E-MAIL", "STATUS", "TIPO"]
 
     # Pede ao usuário para digitar o nome do usuário que deseja buscar
-    login_usuario = input("Digite o nome do usuário que deseja buscar: ")
+    login_user = input("Digite o nome do usuário que deseja buscar: ")
     print()
     linha(50)
     print()
@@ -35,10 +35,10 @@ def pesquisa_usuario():
     session = Session()
 
     # Busca informações sobre o usuário especificado
-    user = session.query(Usuarios).filter(Usuarios.login_usuario == login_usuario).first()
+    user = session.query(Usuarios).filter(Usuarios.login_usuario == login_user).first()
     if user:
         dados = [[user.idusuario, user.login_usuario, user.email_usuario, user.status_usuario, user.tipo]]
-        tabela_relatorio(cabecalho, dados)
+        table_report(header, dados)
     else:
         print("Usuário não encontrado.")
 
@@ -46,10 +46,32 @@ def pesquisa_usuario():
     session.close()
 
 
-def listagem_grupo():
+def list_user_deleted():
+    titulo_principal(10, "Listagem de Usuários Excluídos.")
+    print("""Legenda da tabela\nSTATUS: A-Ativo, B-Bloqueado\nTIPO: A-Administrador, U-Usuário.\n""")
+    # Cria a lista com os títulos das colunas
+    header = ["MATRICULA", "NOME USUÁRIO", "E-MAIL", "STATUS", "TIPO", "DELETADO"]
+
+    session = Session()
+
+    # Consulta a tabela 'Usuarios' para obter todos os usuários excluídos
+    users = session.query(Usuarios).filter(Usuarios.deleted == True).all()
+
+    # Prepara os dados para exibir na tabela
+    dados = [[user.idusuario, user.login_usuario, user.email_usuario, user.status_usuario, user.tipo, user.deleted]
+             for user in users]
+
+    # Exibe a tabela com os usuários excluídos
+    table_report(header, dados)
+
+    # Fecha a sessão quando terminar de usá-la
+    session.close()
+
+
+def list_group():
     titulo_principal(15, "Listagem de Grupos.")
     # Cria a lista com os títulos das colunas
-    cabecalho = ["MATRICULA", "DESCRIÇÃO DO GRUPO"]
+    header = ["MATRICULA", "DESCRIÇÃO DO GRUPO"]
 
     session = Session()
 
@@ -59,17 +81,17 @@ def listagem_grupo():
              for grupo in grupo]
     # Fechar a sessão quando terminar de usá-la
     session.close()
-    tabela_relatorio(cabecalho, dados)
+    table_report(header, dados)
 
 
-def pesquisa_grupo():
+def search_group():
     titulo_principal(15, "Pesquisa de Grupo.")
 
     # Cria a lista com os títulos das colunas
-    cabecalho = ["MATRICULA", "DESCRIÇÃO DO GRUPO"]
+    header = ["ID", "DESCRIÇÃO DO GRUPO"]
 
     # Pede ao usuário para digitar o nome do grupo que deseja buscar
-    descricao = input("Digite o nome do grupo que deseja buscar: ")
+    description = input("Digite o nome do grupo que deseja buscar: ")
     print()
     linha(50)
     print()
@@ -77,10 +99,10 @@ def pesquisa_grupo():
     session = Session()
 
     # Busca informações sobre o usuário especificado
-    grupo = session.query(Grupos).filter(Grupos.descricao == descricao).first()
+    grupo = session.query(Grupos).filter(Grupos.descricao == description).first()
     if grupo:
         dados = [[grupo.idgrupos, grupo.descricao]]
-        tabela_relatorio(cabecalho, dados)
+        table_report(header, dados)
     else:
         print("Grupo não encontrado.")
 
@@ -88,23 +110,39 @@ def pesquisa_grupo():
     session.close()
 
 
-def tabela_relatorio(cabecalho, dados):
+def list_document():
+    titulo_principal(15, "Listagem de Documentos.")
+    # Cria a lista com os títulos das colunas
+    header = ["ID", "NOME DOCUMENTO", "LOCAL DE SALVAMENTO"]
+
+    session = Session()
+
+    # Check if the username and password are correct
+    document = session.query(Documentos).all()
+    dados = [[document.iddocumento, document.nome_documento, document.endereco_documento]
+             for document in document]
+    # Fechar a sessão quando terminar de usá-la
+    session.close()
+    table_report(header, dados)
+
+
+def table_report(header, dados):
     # Verifica se a lista dados está vazia
     if len(dados) == 0:
         print("A lista dados está vazia")
         return
 
     # Verifica se todas as linhas têm o mesmo número de colunas que a lista cabeçalho
-    for linha in dados:
-        if len(linha) != len(cabecalho):
+    for line in dados:
+        if len(line) != len(header):
             # Adiciona elementos vazios à linha
-            linha.extend([""] * (len(cabecalho) - len(linha)))
+            line.extend([""] * (len(header) - len(line)))
 
     # Calcula a largura máxima de cada coluna
-    largura_colunas = [max(len(str(dado)) for dado in coluna) for coluna in zip(cabecalho, *dados)]
+    largura_colunas = [max(len(str(dado)) for dado in coluna) for coluna in zip(header, *dados)]
 
     # Imprime o cabeçalho da tabela
-    for i, titulo in enumerate(cabecalho):
+    for i, titulo in enumerate(header):
         print(f"{titulo:{largura_colunas[i]}}", end=" | ")
     print()
 
@@ -114,15 +152,15 @@ def tabela_relatorio(cabecalho, dados):
     print()
 
     # Verifica se a lista largura_colunas tem o mesmo comprimento que a lista cabeçalho
-    if len(largura_colunas) != len(cabecalho):
+    if len(largura_colunas) != len(header):
         print(
             f"Erro: A lista largura_colunas tem comprimento {len(largura_colunas)}, "
-            f"mas deveria ter o mesmo comprimento que a lista cabeçalho ({len(cabecalho)})")
+            f"mas deveria ter o mesmo comprimento que a lista cabeçalho ({len(header)})")
 
     else:
         # Imprime os dados da tabela
-        for linha in dados:
-            for dado, largura in zip(linha, largura_colunas):
+        for line in dados:
+            for dado, largura in zip(line, largura_colunas):
                 print(f"{dado:{largura}}", end=" | ")
             print()
 
